@@ -1,0 +1,70 @@
+admin:
+  access_log_path: "/dev/null"
+  address:
+    socket_address:
+      address: 0.0.0.0
+      port_value: 19000
+
+static_resources:
+  clusters:
+
+  - name: local_agent
+    connect_timeout: 1s
+    type: strict_dns
+    lb_policy: round_robin
+    hosts:
+      - socket_address:
+          address: consul # consul agent
+          port_value: 8502
+
+
+  # - name: "statsd"
+  #   connect_timeout: "0.25s"
+  #   type: "strict_dns"
+  #   lb_policy: "ROUND_ROBIN"
+  #   hosts:
+  #     - socket_address:
+  #         address: "statsd_exporter"
+  #         port_value: 9125
+
+  - name: jaeger
+    connect_timeout: 1s
+    type: strict_dns
+    lb_policy: round_robin
+    load_assignment:
+      cluster_name: jaeger
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: jaeger
+                port_value: 9411
+                
+tracing:
+  http:
+    name: envoy.zipkin
+    config:
+      collector_cluster: jaeger
+      collector_endpoint: "/api/v1/spans"
+      shared_span_context: false  
+
+# stats_sinks:
+#   - name: "envoy.statsd"
+#     config:
+#       tcp_cluster_name: "statsd-exporter"
+#       prefix: envoy 
+
+dynamic_resources:
+  lds_config:
+    ads: {}
+  cds_config:
+    ads: {}
+  ads_config:
+    api_type: GRPC
+    grpc_services:
+      initial_metadata:
+      - key: x-consul-token
+        value: ''
+      envoy_grpc:
+        cluster_name: local_agent

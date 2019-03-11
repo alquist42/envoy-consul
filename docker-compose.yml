@@ -1,0 +1,74 @@
+version: '3.6'
+
+services:
+
+  consul:
+    image: consul:latest
+    restart: always
+    networks:
+      discovery:
+        aliases:
+          - consul   
+    ports:
+      - 8500:8500
+    command: agent -server -bind 0.0.0.0 -client 0.0.0.0 -dev -ui -bootstrap-expect 1 -node localhost -node-meta demo -datacenter localhost -data-dir "/consul/data" -log-level DEBUG
+    # volumes:
+    #   - ./consul-services.json:/consul/config/consul-services.json -config-file "/consul/config/consul-services.json
+    #   - consul_data:/consul/data
+
+  jaeger:
+    image: jaegertracing/all-in-one
+    environment:
+      - COLLECTOR_ZIPKIN_HTTP_PORT=9411
+    networks:
+      discovery:
+        aliases:
+          - jaeger  
+    expose:
+      - "9411"
+      - "16686"
+    ports:
+      - "16686:16686"
+
+  service1:
+    image: consul-envoy:latest
+    build: ./sidecar
+    networks:
+      - discovery
+    environment:
+      - REG_SERVICE_NAME=service1
+    depends_on:
+      - consul
+      - jaeger
+
+  service2:
+    image: consul-envoy:latest
+    build: ./sidecar
+    networks:
+      - discovery
+    environment:
+      - REG_SERVICE_NAME=service2
+    deploy:
+      replicas: 3
+    depends_on:
+      - consul
+      - jaeger
+
+  client:
+    image: consul-envoy:latest
+    build: ./sidecar
+    networks:
+      - discovery
+    environment:
+      - REG_SERVICE_NAME=client
+    depends_on:
+      - service1
+      - service2
+
+networks:
+   discovery:
+     external:
+       name: discovery
+
+# volumes:
+#   consul_data:
