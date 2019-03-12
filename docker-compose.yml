@@ -6,9 +6,7 @@ services:
     image: consul:latest
     restart: always
     networks:
-      discovery:
-        aliases:
-          - consul   
+      - discovery
     ports:
       - 8500:8500
     command: agent -server -bind 0.0.0.0 -client 0.0.0.0 -dev -ui -bootstrap-expect 1 -node localhost -node-meta demo -datacenter localhost -data-dir "/consul/data" -log-level DEBUG
@@ -67,8 +65,6 @@ services:
 
 networks:
    discovery:
-     external:
-       name: discovery
 
 # volumes:
 #   consul_data:

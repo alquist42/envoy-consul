@@ -278,14 +278,7 @@ def start(service, port, consul_host):
       c.register(local)
       c.register(proxy)
       print('registered')
-      print('[python] Started, waiting for SIGTERM')
-      # while True:
-      #     if running:
-      #         time.sleep(1)
-      #     else:
-      #         break
-
-      # print('[python] Bye...')
+      
     else:
       print('no connection...')
 

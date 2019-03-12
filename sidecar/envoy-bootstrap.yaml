@@ -8,39 +8,45 @@ admin:
 static_resources:
   clusters:
 
-  - name: local_agent
-    connect_timeout: 1s
-    type: strict_dns
-    lb_policy: round_robin
-    hosts:
-      - socket_address:
-          address: consul # consul agent
-          port_value: 8502
+    - name: local_agent
+      connect_timeout: 1s
+      type: STRICT_DNS
+      http2_protocol_options: {}
+      lb_policy: ROUND_ROBIN
+      load_assignment:
+        cluster_name: local_agent
+        endpoints:
+          - lb_endpoints:
+            - endpoint:
+                address:
+                  socket_address:
+                    address: consul
+                    port_value: 8502
 
 
-  # - name: "statsd"
-  #   connect_timeout: "0.25s"
-  #   type: "strict_dns"
-  #   lb_policy: "ROUND_ROBIN"
-  #   hosts:
-  #     - socket_address:
-  #         address: "statsd_exporter"
-  #         port_value: 9125
+    # - name: "statsd"
+    #   connect_timeout: "0.25s"
+    #   type: "strict_dns"
+    #   lb_policy: "ROUND_ROBIN"
+    #   hosts:
+    #     - socket_address:
+    #         address: "statsd_exporter"
+    #         port_value: 9125
 
-  - name: jaeger
-    connect_timeout: 1s
-    type: strict_dns
-    lb_policy: round_robin
-    load_assignment:
-      cluster_name: jaeger
-      endpoints:
-      - lb_endpoints:
-        - endpoint:
-            address:
-              socket_address:
-                address: jaeger
-                port_value: 9411
-                
+    - name: jaeger
+      connect_timeout: 1s
+      type: STRICT_DNS
+      lb_policy: ROUND_ROBIN
+      load_assignment:
+        cluster_name: jaeger
+        endpoints:
+          - lb_endpoints:
+            - endpoint:
+                address:
+                  socket_address:
+                    address: jaeger
+                    port_value: 9411
+                  
 tracing:
   http:
     name: envoy.zipkin
